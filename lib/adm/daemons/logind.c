@@ -43,6 +43,7 @@
 #include <login_macros.h>
 #include <net/daemons.h>
 #include <logs.h>
+#include <ansi.h>
  
  
 void logon(object ob);
@@ -205,8 +206,8 @@ protected void get_name(string str, object ob)
         ctime(time()), str, strlen(str), name_units, korean_name, exists,
         user_data_file(ob, str) + __SAVE_EXTENSION__));
     if (exists && !korean_name) {
-        if (strlen(str) > 11) {
-            write("이름은 11자를 초과할 수 없습니다.\n");
+        if (strlen(str) > 6) {
+            write("이름은 6자를 초과할 수 없습니다.\n");
             write(LOGIN_PROMPT);
             input_to("get_name", 2, ob);
             return;
@@ -250,7 +251,7 @@ write(NO_NEW_USERS);
   ob -> remove_user();
   return;
 #endif /*WIZ_LOCK*/
- write("\n\"" + capitalize(str) + "\"은(는) 새 캐릭터 이름입니다.\n" +
+ write("\n" + HIY+han_desc(capitalize(str)) +NOR+ " 새 캐릭터 이름입니다.\n" +
 	  "이 이름으로 생성하시겠습니까? (예/아니오): ");
 	input_to("choice", 2, ob, str);
 	return; }

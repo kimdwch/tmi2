@@ -1,0 +1,114 @@
+###############################################################################
+#                    TMI-2용 FluffOS 드라이버 설정                              #
+###############################################################################
+# 항목 형식: 설정 이름 : 값
+# '#'으로 시작하는 줄과 빈 줄은 무시됩니다.
+# 경로 값은 기존 설정 그대로 유지했습니다.
+###############################################################################
+
+# 머드 이름
+name : TMI-2 FluffOS
+
+# 접속을 받을 Telnet 포트
+port number :5000
+
+# LPC 머드 라이브러리의 위치
+mudlib directory : ../lib
+
+# 현재 드라이버에서 읽지 않는 구형 설정의 경로를 참고용으로 보존합니다.
+# binary directory : /mud/tmi2/bin 250927 DWon 구형 버전 설정
+# swap file : /adm/tmp/swap 250927 DWon 구형 버전 설정
+# secure directory : /adm/obj
+# config directory : /adm/etc
+# access allow file : /adm/etc/access.allow
+# access log file : /log/access.allow.log
+# save binaries directory : /data/binaries
+
+# 마스터 객체의 LPC 경로
+master file : /adm/obj/master
+
+# 드라이버 디버그 로그를 기록할 디렉터리
+log directory : /log
+
+# #include <...>가 참조할 디렉터리. 여러 경로는 ':'으로 구분합니다.
+include directories :/include
+
+# 전역 simulated efun을 정의하는 객체
+simulated efun file : /adm/obj/simul_efun
+
+# 사용하지 않는 객체의 clean_up()을 호출하기까지의 시간(초)
+# 미사용 객체의 교체 대기 시간보다 길게 설정합니다.
+time to clean up : 1800
+# 기존 TMI-2 설정값: 600
+
+# 미사용 객체를 교체하기까지의 시간(초). 0이면 교체를 사용하지 않습니다.
+time to swap : 1200
+# 기존 TMI-2 설정값: 900
+
+# 객체의 reset()을 다시 호출하기까지의 시간(초)
+time to reset : 1800
+# 기존 TMI-2 설정값: 2400
+
+# 평가 스택의 최대 크기. 지역 변수와 함수 인수 등이 이 스택에 들어갑니다.
+evaluator stack size : 1000
+
+# 함수 호출의 최대 깊이
+maximum call depth : 30
+
+# 비트 필드의 최대 비트 수
+maximum bits in a bitfield : 1200
+
+# 한 실행에 허용되는 최대 평가 비용. 초과하면 해당 실행을 중단합니다.
+maximum evaluation cost : 500000
+# 기존 TMI-2 설정값: 500000
+
+# 배열 하나에 허용되는 최대 원소 수
+maximum array size : 5000
+# 기존 TMI-2 설정값: 15000
+
+# 매핑 하나에 허용되는 최대 항목 수
+maximum mapping size : 5000
+# 기존 TMI-2 설정값: 15000
+
+# 문자열 하나에 허용되는 최대 바이트 수
+maximum string length : 200000
+
+# read_file()이 한 번에 읽을 수 있는 최대 파일 크기(바이트)
+maximum read file size : 200000
+
+# read_bytes()와 write_bytes()가 한 번에 전송할 수 있는 최대 바이트 수
+maximum byte transfer : 10000
+
+# 공유 문자열 해시 테이블 크기. 구형 설정값 5003은 현행 최솟값 7001보다
+# 작으므로 실제 적용되던 기본값 65536으로 명시합니다.
+hash table size : 65536
+# 기존 TMI-2 설정값: 3067
+
+# find_living()에 사용하는 해시 테이블 크기. 구형 설정값 103은 현행
+# 최솟값 256보다 작으므로 실제 적용되던 기본값 256으로 명시합니다.
+living hash table size : 256
+# 기존 TMI-2 설정값: 47
+
+# 객체 해시 테이블 크기. 구형 설정값 1009는 현행 최솟값 1024보다
+# 작으므로 실제 적용되던 기본값 4096으로 명시합니다.
+object table size : 4096
+# 기존 TMI-2 설정값: 383
+
+# 객체 상속의 최대 깊이
+inherit chain size : 20
+# 기존 TMI-2 설정값: 30
+
+# 런타임 오류가 발생했을 때 사용자에게 보여 줄 메시지
+default error message : I think we have a driver error....sorry
+
+# 사용자 명령에 대응하는 동작을 찾지 못했을 때 보여 줄 메시지
+default fail message  : What ?
+
+# 버퍼 하나에 허용되는 최대 바이트 수
+maximum buffer size : 100000
+
+# 드라이버 디버그 로그의 파일명
+debug log file : debug.log
+
+# 모든 LPC 객체를 컴파일할 때 자동으로 포함하는 헤더
+global include file : <mudlib.h>

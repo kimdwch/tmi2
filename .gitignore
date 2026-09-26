@@ -1,4 +1,6 @@
-bin/
+bin/driver
+bin/driver.exe
+bin/log/debug.log
 lib/adm/etc/I3.o
 lib/adm/etc/I3.json
 lib/log/*
