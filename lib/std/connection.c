@@ -112,6 +112,7 @@ int save_data_conn() {
 int restore() {
 
 	int success ;
+	string save_file, legacy_file;
 
    if( !name || geteuid( previous_object() ) != ROOT_UID ) return 0;
 // printf( "Debug: PO is %O\n", previous_object() );
@@ -126,12 +127,26 @@ int restore() {
 #else
 // Log data files which don't load...don't exist? wrong permissions at
 // Unix level?
-        if (catch(success = restore_object(user_data_file(this_object())+__SAVE_EXTENSION__))) {
-                log_file("restore_err",
-                sprintf("[%s] Unable to restore_object(\"%s\")\n", name,
-                      user_data_file(this_object())+__SAVE_EXTENSION__ ));
-                      success = 0;
+		save_file = user_data_file(this_object()) + __SAVE_EXTENSION__;
+		if (file_size(save_file) > 0) {
+			if (catch(success = restore_object(save_file))) {
+				log_file("restore_err",
+				sprintf("[%s] Unable to restore_object(\"%s\")\n", name,
+					  save_file));
+				success = 0;
+			}
         }
+	if (!success) {
+	    legacy_file = PDATA_DIR + extract(name, 0, 0) + "/" + name +
+		    __SAVE_EXTENSION__;
+	    if (file_size(legacy_file) > 0 &&
+		catch(success = restore_object(legacy_file))) {
+		log_file("restore_err",
+			sprintf("[%s] Unable to restore_object(\"%s\")\n",
+				name, legacy_file));
+		success = 0;
+	    }
+	}
         return success;
 #endif
 }

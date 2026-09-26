@@ -42,10 +42,9 @@ object given a pointer to the body object. (This is done because the
 users() efun returns a pointer to the interactive object, which is always
 the body. Thus, usually one needs to access the connection object via the
 body, rather than the other way around.) The connection object saves its
-data to the file /data/std/connection/f/foo.o, where foo is the name of
-the user: the body object saves its data to /data/std/user/f/foo.o. The
-data saved is always that of the user body, rather than a monster or
-ghost body.
+data to /data/std/connection/foo.o, where foo is the name of the user;
+the body object saves its data to /data/std/user/foo.o. The data saved is
+always that of the user body, rather than a monster or ghost body.
 Changing bodies is done with the switch_body() lfun defined in the connection
 object. First, you get a pointer to the new body, and set the "new_body"
 property in the connection object. Then you call switch_body(); the

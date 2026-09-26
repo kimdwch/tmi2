@@ -17,10 +17,10 @@
 //  Standard mud-style login prompt
  
 #define LOGIN_MSG read_file("/adm/news/welcome") + "\n" + \
-	capitalize(mud_name()) + " is running the " + MUDLIB_VERSION + \
-	" mudlib on " + version() + "\n\n"
-#define LOGIN_PROMPT "By what name do you wish to be known? "
-#define PASSWORD_PROMPT "Please enter your password: "
+	capitalize(mud_name()) + "은(는) " + MUDLIB_VERSION + \
+	" 머드 라이브러리, " + version() + "을(를) 실행 중입니다.\n\n"
+#define LOGIN_PROMPT "어떤 이름으로 불리시겠습니까? "
+#define PASSWORD_PROMPT "비밀번호를 입력해 주세요: "
  
  
 //  If NO_REMOTE_LOGINS is defined, then the login system will compare the
@@ -57,7 +57,7 @@
 //  Any value for this #define will be printed to the user's screen before
 // hir connection is dumped.
 
-#undef NO_NEW_USERS "\tTesting a new feature."
+#undef NO_NEW_USERS "\t새 기능을 시험 중입니다."
  
  
 //  If USER_LIST is defined, a list of visible users will be given
@@ -78,9 +78,8 @@
 //  will be displayed before the connection is closed.
  
 #ifdef 0
-#define REGISTER_MSG "This mud is presently register-only. To obtain " + \
-	   "a character, \nplease send an email request to " + \
-  	   ADMIN_EMAIL + ".\nHope to hear from you soon.\n\n"
+#define REGISTER_MSG "현재 이 머드에서는 사전 등록된 사용자만 접속할 수 있습니다. 캐릭터를 받으려면\n" + \
+	   ADMIN_EMAIL + "로 이메일을 보내 신청해 주세요.\n연락 기다리겠습니다.\n\n"
 #endif
  
  

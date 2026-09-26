@@ -1,7 +1,4 @@
 bin/
 lib/adm/etc/I3.o
-lib/log/catch
-lib/log/crashes
-lib/log/http_errors
-lib/log/log
-lib/log/runtime
+lib/log/*
+lib/data/*

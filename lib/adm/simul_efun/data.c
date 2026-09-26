@@ -17,7 +17,7 @@ varargs string user_data_dir(object obj, string name) {
    if (!name) return "" ;
 //   if (!name) error("user_data_dir: Can't determine user's name.\n");
         ret = data_dir(obj);
-        if (base_name(obj) != USER_OB)
+        if (base_name(obj) != USER_OB && base_name(obj) != CONNECTION)
                 ret += "/" + extract(name, 0, 0);
    return ret;
 }

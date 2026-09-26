@@ -1,39 +1,37 @@
-// File   :  /adm/daemons/logind.c
-// Creator :  Sulam@TMI  (12-13-91)
-// Updated :  Sulam@TMI  (3-29-92)  Added real_name prompting
-//     Sulam@TMI  (4-10-92)  Added game locking
-//     Buddha@TMI  (9-4-92)  Added news system and
-//      expanded the login process
+// 파일   :  /adm/daemons/logind.c
+// 작성자 :  Sulam@TMI  (12-13-91)
+// 수정   :  Sulam@TMI  (3-29-92)  실명 입력 기능 추가
+//     Sulam@TMI  (4-10-92)  게임 잠금 기능 추가
+//     Buddha@TMI  (9-4-92)  뉴스 시스템 추가 및
+//      로그인 절차 확장
 //
-// Overhauled by Buddha@TMI (12-92) to support a separate creation
-// module and to serve as a login daemon
+// Buddha@TMI가 (12-92) 캐릭터 생성 모듈을 분리하고
+// 로그인 데몬으로 동작하도록 전면 개편
 //
-// Updated :  Watcher@TMI  (2-9-93)  Moved news display to nes
-//      news daemon, and inserted check for users stuck
-//      in login limbo
-//     Watcher@TMI  (2-22-93)  Added an optional userlist
-//      display during the welcome screen
-//     Watcher@TMI  (2-23-93)  Streamlined Guest login process,
-//      added banish name system, and upgraded a few other things.
-//     Watcher@TMI  (3-9-93)  Added login failure notification.
-//     Watcher@TMI  (4-7-93)  Added max players, WIZ_LOCK,
-//      ADMIN_LOCK, and shutdown entry check.
-//     Watcher@TMI  (4/15/93)  Added NO_REMOTE_LOGIN check option.
-//     Watcher@TMI  (4/29/93)  Added hibernation checks.
-//     Karathan  (7/13/93)  Tidied and moved updated banish code
-//      to the banish daemon.
-//     Karathan  (8/12/93)  Added email-registration command handler.
-//     Rust@TMI-2 (11/12/93)  Fixed WIZ_LOCK bugs.
-//     Rust@TMI-2 (11/24/93) Added option to disable new character creation.
-//     Mobydick@TMI-2 (4/8/94) Added logging of failed login attempts.
-//			Original idea from Inspiral@Tabor
-//     Inspiral@TMI-2 (04/18/94) Shortened log_file(BAD_LOGIN) message.
-//    Beek@TMI-2 (7/31/94) hushlogin support
-//	Leto@Tmi-2 (6/24/95) fix for SAVE_EXTENSION/__SAVE_EXTENSION__
- 
-// Much of the login process can be customized to suit your 
-// specific variety of mud and its atmosphere.  These defines
-// can be found, for the most part, in /include/login.h
+// 수정   :  Watcher@TMI  (2-9-93)  뉴스 표시를 뉴스 데몬으로 이동하고
+//      로그인 상태에서 멈춘 사용자를 확인하는 기능 추가
+//     Watcher@TMI  (2-22-93)  환영 화면에 선택적으로
+//      접속자 목록을 표시하는 기능 추가
+//     Watcher@TMI  (2-23-93)  게스트 로그인 절차 간소화,
+//      이름 차단 시스템 및 기타 기능 개선
+//     Watcher@TMI  (3-9-93)  로그인 실패 알림 추가
+//     Watcher@TMI  (4-7-93)  최대 접속자 수, WIZ_LOCK,
+//      ADMIN_LOCK 및 서버 종료 중 접속 확인 추가
+//     Watcher@TMI  (4/15/93)  NO_REMOTE_LOGIN 확인 옵션 추가
+//     Watcher@TMI  (4/29/93)  휴면 상태 확인 기능 추가
+//     Karathan  (7/13/93)  차단 관련 코드를 정리하고
+//      차단 데몬으로 이동
+//     Karathan  (8/12/93)  이메일 등록 명령 처리 기능 추가
+//     Rust@TMI-2 (11/12/93)  WIZ_LOCK 버그 수정
+//     Rust@TMI-2 (11/24/93) 새 캐릭터 생성 비활성화 옵션 추가
+//     Mobydick@TMI-2 (4/8/94) 로그인 실패 기록 기능 추가
+//			Inspiral@Tabor의 아이디어를 바탕으로 함
+//     Inspiral@TMI-2 (04/18/94) log_file(BAD_LOGIN) 메시지 축약
+//    Beek@TMI-2 (7/31/94) hushlogin 지원
+//	Leto@Tmi-2 (6/24/95) SAVE_EXTENSION/__SAVE_EXTENSION__ 처리 수정
+
+// 로그인 절차의 상당 부분은 머드의 종류와 분위기에 맞게
+// 설정할 수 있습니다. 관련 설정은 대부분 /include/login.h에 있습니다.
  
 #include <uid.h>
 #include <priv.h>
@@ -65,7 +63,7 @@ void create()
     seteuid(ROOT_UID);
 }
  
-// This is called when a new user logs in.
+// 새 사용자가 로그인할 때 호출됩니다.
  
 void logon(object ob)
 {
@@ -76,25 +74,25 @@ void logon(object ob)
     if (base_name(previous_object()) != CONNECTION)
 	return;
  
-//  Enable NO_REMOTE_LOGINS in /include/login.h if only local site logins
-//  to the mud are being permitted (ie the first two segments of the ip
-//  number of the login match those of the mud host machine).  
+//  내부 네트워크에서의 접속만 허용하려면 /include/login.h에서
+//  NO_REMOTE_LOGINS를 활성화합니다. 로그인한 사용자의 IP 주소 앞 두 부분이
+//  머드 호스트의 IP 주소 앞 두 부분과 일치해야 접속할 수 있습니다.
 #ifdef NO_REMOTE_LOGINS
     local_host = (string)DNS_MASTER->get_host_name(mud_name());
     if (!local_host || local_host == "" ||
 	sscanf(local_host, "%d.%d.%d.%d", a1, a2, a3, a4) != 4)
-      { write("\n  Could not resolve local network ip number from mud name " +
-	      "server.\n  An accessible ip number must be available for user " +
-	      "validation check.\n  Shutting down.\n\n");
+      { write("\n  게임 서버 이름에서 네트워크 IP 주소를 확인할 수 없습니다.\n" +
+          "  사용자 확인을 위해 접근 가능한 IP 주소가 필요합니다.\n" +
+          "  연결을 종료합니다.\n\n");
 	ob->remove_user();
 	return; }
     else
 	pattern = a1 + "." + a2 + ".%d.%d";
     if (!query_ip_number(ob) ||
 	sscanf(query_ip_number(ob), pattern, a1, a2) != 2)
-      { write("\n\t" + capitalize(mud_name()) + " is presently only " +
-	      "accepting local logins.\n\tEnquires can be directed to " +
-	      ADMIN_EMAIL + ".\n\n");
+      { write("\n\t현재 " + capitalize(mud_name()) + "은(는) 내부 접속만 " +
+          "허용하고 있습니다.\n\t문의는 다음 주소로 보내 주세요: " +
+          ADMIN_EMAIL + "\n\n");
 	ob->remove_user();
 	return; }
 #endif /* NO_REMOTE_LOGINS */
@@ -102,10 +100,10 @@ void logon(object ob)
  
     write(LOGIN_MSG);
  
-//  Enable USER_LIST in /include/login.h to display current users of the
-//  mud at this stage of the login.
+//  로그인 중 현재 접속자 목록을 표시하려면 /include/login.h에서
+//  USER_LIST를 활성화합니다.
 #ifdef USER_LIST
-    write(wrap("Current users: " + active_users()) + "\n");
+    write(wrap("현재 접속자: " + active_users()) + "\n");
 #endif /* USER_LIST */
  
     write(LOGIN_PROMPT);
@@ -116,96 +114,72 @@ void logon(object ob)
  
 protected int valid_hangul_name(string name)
 {
-    int i, length, first, second, third, count;
+    int i, length, codepoint;
 
-    length = strlen(name);
-    for (i = 0; i < length; ) {
-        first = name[i];
-        if (first >= 0xAC00 && first <= 0xD7A3) {
-            i++;
-        } else {
-            if (first < 0) first += 256;
-            if (i + 2 >= length) return 0;
-            second = name[i + 1];
-            third = name[i + 2];
-            if (second < 0) second += 256;
-            if (third < 0) third += 256;
-
-            if (first == 0xEA) {
-                if (second < 0xB0 || second > 0xBF) return 0;
-            } else if (first == 0xEB || first == 0xEC) {
-                if (second < 0x80 || second > 0xBF) return 0;
-            } else if (first == 0xED) {
-                if (second < 0x80 || second > 0x9E) return 0;
-            } else {
-                return 0;
-            }
-            if (third < 0x80 || third > 0xBF) return 0;
-            i += 3;
-        }
-        count++;
-        if (count > 6) return 0;
+    length = sizeof(name);
+    if (length < 1 || length > 6) return 0;
+    for (i = 0; i < length; i++) {
+        codepoint = name[i];
+        if (codepoint < 0xAC00 || codepoint > 0xD7A3) return 0;
     }
-    return count > 0;
+    return 1;
 }
 
 protected void get_name(string str, object ob)
 {
-    string tmp, tmp1, tmp2;
+    string tmp, tmp1, tmp2, name_units;
     int bad_name, loop, i, sd_time, exists, korean_name;
  
-// Did they supply anything?
+// 이름을 입력했는지 확인합니다.
     if (!str || str=="") {
-	write ("\nSorry, you must supply a name for your character.\n\n") ;
+    write ("\n캐릭터 이름을 입력해야 합니다.\n\n") ;
 	write (LOGIN_PROMPT) ;
 	input_to("get_name",2,ob) ;
 	return ;
     }
-// Do they want to quit at this point?
+    // 여기서 종료하려는지 확인합니다.
 	if (str == "q" || str == "quit")
 	{
-	    write ("See you again soon!\n") ;
+        write ("다음에 또 만나요!\n") ;
 	    ob->remove_user() ;
 	    return ;
 	}
-//  Enable ADMIN_LOCK in /include/login.h with a reason for lockout
-//  if you wish to allow only Admin onto the mud.
+//  관리자만 머드에 접속하도록 제한하려면 /include/login.h에서
+//  ADMIN_LOCK을 활성화하고 접속 제한 사유를 지정합니다.
 #ifdef ADMIN_LOCK
     if (!adminp(str))
-      { write("\n\n\n" +"\t\t" + mud_name() +
-	      " Is Temporarily Closed for Repairs.\n\n" +
-	      "\t\tReason for Closure:\n" +
-	      "\t\t" + ADMIN_LOCK + "\n\n" +
-	      "\t\tSorry for the inconvenience,\n" +
-	      "\t\t\t-The Management\n\n\n");
+      { write("\n\n\n\t\t" + mud_name() +
+          "은(는) 현재 점검을 위해 임시로 문을 닫았습니다.\n\n" +
+          "\t\t점검 사유:\n" +
+          "\t\t" + ADMIN_LOCK + "\n\n" +
+          "\t\t이용에 불편을 드려 죄송합니다.\n" +
+          "\t\t\t-운영진\n\n\n");
 	ob->remove_user();
 	return; }
 #endif /* ADMIN_LOCK */
  
  
-//  If a maximum number of users is defined in /include/login.h, check
-//  to make sure we haven't exceeded that number.  If so, and the user
-//  is not an Admin, tell them to try again later.
+//  /include/login.h에 최대 접속자 수가 지정되어 있으면 제한을 초과했는지
+//  확인합니다. 관리자가 아니라면 나중에 다시 접속하도록 안내합니다.
 #ifdef MAX_USERS
     if (!adminp(str) && sizeof(users()) > MAX_USERS)
-      { write("\n\n  Sorry, " + capitalize(mud_name()) + " is full " +
-	      "presently ... Please try again shortly.\n\n");
+    { write("\n\n  죄송합니다. 현재 " + capitalize(mud_name()) +
+	      "에 접속 인원이 가득 찼습니다. 잠시 후 다시 시도해 주세요.\n\n");
 	ob->remove_user();
 	return; }
 #endif /* MAX_USERS */
  
  
-//  If NO_SHUTDOWN_LOGIN is defined in /include/login.h and a non-admin
-//  tries to login  during an ongoing shutdown, they will be informed of
-//  the shutdown and when the mud is likely to be back up.
+//  /include/login.h에서 NO_SHUTDOWN_LOGIN을 정의하면 서버 종료가 진행 중일 때
+//  관리자 외 사용자의 접속을 막고, 서버가 다시 열릴 예정 시각을 안내합니다.
 #ifdef NO_SHUTDOWN_LOGIN
     sd_time = (int)SHUTDOWN_D->query_shutdown();
     if (sd_time)
 	sd_time = (sd_time - time()) / 60;
     if (sd_time && sd_time < 5 && !adminp(str))
-      { write("\n\n  Sorry, a mud shutdown is currently in progress.\n  The " +
-	      "mud should be back up in " + (sd_time + 3) + " minutes.\n" +
-	      "  Hope to see you then!!\n\n");
+      { write("\n\n  죄송합니다. 현재 서버 종료 절차가 진행 중입니다.\n  " +
+          "서버는 약 " + (sd_time + 3) + "분 후 다시 운영될 예정입니다.\n" +
+          "  그때 다시 만나요!\n\n");
 	ob->remove_user();
 	return; }
 #endif /* NO_SHUTDOWN_LOGIN */
@@ -216,36 +190,45 @@ protected void get_name(string str, object ob)
  
     str = lower_case(str);
     exists = file_exists(user_data_file(ob, str) + __SAVE_EXTENSION__);
+    if (!exists)
+	exists = file_exists(PDATA_DIR + extract(str, 0, 0) + "/" + str +
+		    __SAVE_EXTENSION__);
     korean_name = valid_hangul_name(str);
+    name_units = "";
+    for (i = 0; i < sizeof(str); i++)
+        name_units += sprintf("%s%d", i ? "," : "", str[i]);
+    log_file("account_create", sprintf("%s input name=%O bytes=%d units=%s hangul=%d exists=%d connection_file=%s\n",
+        ctime(time()), str, strlen(str), name_units, korean_name, exists,
+        user_data_file(ob, str) + __SAVE_EXTENSION__));
     if (exists && !korean_name) {
         if (strlen(str) > 11) {
-            write("Sorry, your name can't have more than 11 characters.\n");
+            write("이름은 11자를 초과할 수 없습니다.\n");
             write(LOGIN_PROMPT);
             input_to("get_name", 2, ob);
             return;
         }
         for (i = 0; i < strlen(str); i++) {
             if (str[i] < 'a' || str[i] > 'z') {
-                write("Sorry, your name can only have letters. (a-z)\n" +
-                      "Please enter a new name: ");
+                write("이름에는 영문자(a-z)만 사용할 수 있습니다.\n" +
+		      "새 이름을 입력해 주세요: ");
                 input_to("get_name", 2, ob);
                 return;
             }
         }
     } else if (!korean_name && str != "guest") {
-        write("New character names must use Hangul syllables only.\n");
+        write("새 캐릭터 이름은 한글 완성형 음절만 사용할 수 있습니다.\n");
         write(LOGIN_PROMPT);
         input_to("get_name", 2, ob);
         return;
     }
  
  
-    //  Does the user even currently exist? If not, check for correct name.
+    //  사용자가 이미 존재하는지 확인하고, 새 이름이라면 유효성을 검사합니다.
     if (!exists)
       {
-//  Enable NO_NEW_USERS to disable new character creation.
+//  새 캐릭터 생성을 막으려면 NO_NEW_USERS를 활성화합니다.
 #ifdef NO_NEW_USERS
-  write("\n\n\n\tSorry, "+capitalize(mud_name())+" is not open to new character creation.\n\n");
+    write("\n\n\n\t죄송합니다. 현재 "+capitalize(mud_name())+"에서는 새 캐릭터를 만들 수 없습니다.\n\n");
  if(NO_NEW_USERS)
 write(NO_NEW_USERS);
  write("\n\n");
@@ -253,19 +236,18 @@ write(NO_NEW_USERS);
   return;
 #endif /* NO_NEW_USERS */
  
-//  Enable WIZ_lOCK in /include/login.h if you wish to only allow
-//  wizards to login to the mud.  If you define a reason in WIZ_LOCK
-//  it will be displayed before the user is dumped.
+//  마법사만 머드에 접속하도록 제한하려면 /include/login.h에서
+//  WIZ_LOCK을 활성화합니다. WIZ_LOCK에 사유를 지정하면 접속 종료 전에 표시됩니다.
 #ifdef WIZ_LOCK
-  write("\n\n\n\t"+capitalize(mud_name())+" is presently closed to players.\n\n");
+    write("\n\n\n\t현재 "+capitalize(mud_name())+"은(는) 플레이어의 접속을 제한하고 있습니다.\n\n");
   if(WIZ_LOCK)
     write(WIZ_LOCK);
   write("\n\n");
   ob -> remove_user();
   return;
 #endif /*WIZ_LOCK*/
- write("\n\"" + capitalize(str) + "\" is a new character.\n" +
-	      "Is this really the name you wish to use? (y(es) or n(o)): ");
+ write("\n\"" + capitalize(str) + "\"은(는) 새 캐릭터 이름입니다.\n" +
+	  "이 이름으로 생성하시겠습니까? (예/아니오): ");
 	input_to("choice", 2, ob, str);
 	return; }
  
@@ -274,14 +256,14 @@ write(NO_NEW_USERS);
     seteuid(getuid());
     ob->SET_NAME(str);
     if (!ob->restore())
-      { write("Failed to restore login object.\n");
+	  { write("로그인 정보를 복구하지 못했습니다.\n");
 	ob->remove();
 	return ; }
  
 #ifdef WIZ_LOCK
     if (!ob->query("wizard"))
-      { write("\n\n\n" + "\t" + capitalize(mud_name()) + " is presently " +
-	      "closed to players.\n\n");
+      { write("\n\n\n\t현재 " + capitalize(mud_name()) +
+          "은(는) 플레이어의 접속을 제한하고 있습니다.\n\n");
 	if (WIZ_LOCK)
 	    write( WIZ_LOCK );
 	write("\n\n");
@@ -289,7 +271,7 @@ write(NO_NEW_USERS);
 	return; }
 #endif /* WIZ_LOCK */
  
-    // If it is the Guest character, no password is asked for.
+    // 게스트 캐릭터는 비밀번호를 묻지 않습니다.
     if (str == "guest")
       { get_password("", ob, 1);
 	return; } 
@@ -313,9 +295,9 @@ protected void get_password(string pass, object ob, int count)
  
     write("\n");
     if (!check_password(pass, ob) && (string)ob->query("name") != "guest")
-      { write("Sorry, that password is incorrect.\n");
+	  { write("비밀번호가 올바르지 않습니다.\n");
 	if (count > 2)
-	  { write("\nYou have taken too many tries.\n");
+      { write("\n비밀번호 입력 횟수를 초과했습니다.\n");
 	    ob->set("passwd_fail", ({ query_ip_name(ob), time() }) );
 #ifdef BAD_LOGIN
 	    log_file(BAD_LOGIN,
@@ -324,23 +306,22 @@ query_ip_name( ob ) + "\n" );
 #endif
 	    ob->remove_user();
 	    return; }
-	write("Please reenter your password: ");
+    write("비밀번호를 다시 입력해 주세요: ");
 	input_to("get_password", 3, ob, count + 1);
 	return; }
  
-    // This code checks to see if the user is in hibernation.
+    // 캐릭터가 휴면 상태인지 확인합니다.
     hibernate = ob->query("hibernate");
     if (hibernate && time() < hibernate)
-      { write("\nYour character is in hibernation until " + ctime(hibernate) +
-       ".\nYou will be allowed to login again after that date. See you" +
-       " then!\n");
+	  { write("\n캐릭터가 " + ctime(hibernate) + "까지 휴면 상태입니다.\n" +
+	       "해당 시각 이후 다시 로그인할 수 있습니다. 그때 뵙겠습니다!\n");
 	ob->remove_user();
 	return; }
     else if (hibernate)
 	ob->set("hibernate", 0);
     body = find_player((string) ob->NAME);
  
-    // If user is stuck in login limbo ... dest old copy 
+    // 로그인 절차에서 멈춘 사용자가 있으면 이전 연결을 제거합니다.
     if (body && !environment(body))
 	body->remove();
  
@@ -348,12 +329,11 @@ query_ip_name( ob ) + "\n" );
       { ob->SET_BODY_OB(body);
 	if (interactive(body))
  
-//  If ONE_GUEST is defined in /include/login.h, only permit one guest login.
+//  /include/login.h에서 ONE_GUEST를 정의하면 게스트는 한 명만 접속할 수 있습니다.
 #ifdef ONE_GUEST
 	  { if ((string)ob->query("name") == "guest")
-	      { write("Sorry, there is already a Guest character active.\n" +
-		      "Please try again shortly, or login as a new " +
-		      "character.\n\n");
+          { write("이미 게스트 캐릭터가 접속 중입니다.\n" +
+              "잠시 후 다시 시도하거나 새 캐릭터로 로그인해 주세요.\n\n");
 		call_out("remove_copy",1, this_player());
 		return; }
 #else /* ONE_GUEST */
@@ -361,12 +341,12 @@ query_ip_name( ob ) + "\n" );
 	      { exec_old_copy("n", ob);
 		return; }
 #endif /* ONE_GUEST */
-	    write("\nYour other copy is still interactive.\n");
-	    write("Do you want to throw it out? (y/n): ");
+        write("\n같은 캐릭터로 접속한 다른 세션이 아직 활성화되어 있습니다.\n");
+        write("기존 세션을 종료하시겠습니까? (예/아니오): ");
 	    input_to("exec_old_copy", 2, ob);
 	    return; }
  
-//  If EXEC_COPY is defined in /include/login.h, log the exec copy call.
+//  /include/login.h에서 EXEC_COPY를 정의하면 연결 전환을 기록합니다.
 #ifdef EXEC_COPY
 	log_file(EXEC_COPY, capitalize((string)ob->NAME) +
 		 " :\texec copy from " + query_ip_address(ob) + " [" +
@@ -376,7 +356,7 @@ query_ip_name( ob ) + "\n" );
 	if (ob->connect())
 	    body->restart_heart();
 	else
-	  { write("Failed to reconnect...\n");
+      { write("재접속에 실패했습니다.\n");
 	    ob->remove(); }
 	return; }
     login_new_copy(ob);
@@ -387,16 +367,15 @@ protected
 void login_new_copy(object ob)
 {
     if (!ob->restore_body())
-      { write("For some reason, your body could not be restored.\n" +
-	      "You might want to send email to " + ADMIN_EMAIL +
-	      " about this\nor log in with another name to alert the " +
-	      "admins.\n");
+      { write("캐릭터 정보를 복구하지 못했습니다.\n" +
+          "이 문제를 " + ADMIN_EMAIL + "로 알려 주시거나,\n" +
+          "다른 이름으로 로그인해 운영진에게 알려 주세요.\n");
 	ob->remove();
 	return; }
     if (ob->connect())
 	enter_world(ob);
     else
-      { write("Login failed... Sorry... \n");
+	  { write("로그인에 실패했습니다.\n");
 	ob->remove(); }
 }
  
@@ -407,14 +386,14 @@ void exec_old_copy(string s, object user)
     object tmp, link;
     string old_ip;
  
-    if (member_array(s, ({ "y", "Y", "Yes", "yes" }) ) == -1)
+    if (member_array(s, ({ "y", "Y", "Yes", "yes", "예" }) ) == -1)
       { if (!wizardp((object)user->BODY_OB) && 
 	    (string)user->query("name") != "guest")
-	  { write("Then come back another time.\n");
+      { write("다음에 다시 접속해 주세요.\n");
 	    user->remove();
 	    return; }
  
-//  If NEW_COPY is defined in /include/login.h, log the new copy entry.
+//  /include/login.h에서 NEW_COPY를 정의하면 새 연결을 기록합니다.
 #ifdef NEW_COPY
 	log_file(NEW_COPY, capitalize((string)user->NAME) +
 		 " :\tNew copy from " + query_ip_name(user) + " [" +
@@ -423,10 +402,10 @@ void exec_old_copy(string s, object user)
  
 	login_new_copy(user);
 	return; }
-    //  Old connection object
+    //  기존 연결 객체
     link = user->BODY_OB->query_link();
  
-//  If FORCE_EXEC is defined in /include/login.h, log the new copy force.
+//  /include/login.h에서 FORCE_EXEC를 정의하면 강제 연결 전환을 기록합니다.
 #ifdef FORCE_EXEC
     log_file(FORCE_EXEC, capitalize((string)user->NAME) + " :\tForce exec " +
 	     "from " + query_ip_name(user) + " [ " +
@@ -434,12 +413,12 @@ void exec_old_copy(string s, object user)
 #endif /* FORCE_EXEC */
  
     tell_object(user->BODY_OB,
-		"\nYour character has been displaced by someone from " +
-		query_ip_name(user) + ".\n");
+        "\n다른 위치(" + query_ip_name(user) + ")에서 접속하여\n" +
+        "현재 캐릭터 세션이 종료되었습니다.\n");
     old_ip = user->BODY_OB->query("ip");
 
     tmp = new(CONNECTION);
-    //  Exec them into any old object
+    //  기존 객체에 새 연결을 넘깁니다.
     exec(tmp, user->BODY_OB);
     if (old_ip != query_ip_name(user) && old_ip != query_ip_number(user)) {
         user->BODY_OB->setup();
@@ -447,9 +426,9 @@ void exec_old_copy(string s, object user)
 
     tmp->remove();
     if (user->connect())
-	write("Reconnected.\n");
+    write("재접속했습니다.\n");
     else
-	write("Reconnection failed.\n");
+    write("재접속에 실패했습니다.\n");
     link->remove();
     return;
 }
@@ -464,8 +443,8 @@ protected void enter_world(object user)
     seteuid(getuid());
     bad_pass = (mixed *)user->query("passwd_fail");
     if (bad_pass)
-      { tell_object(this_player(), "\nWARNING: Login failure " +
-		    ctime(bad_pass[1]) + " from " + bad_pass[0] + ".\n\n");
+      { tell_object(this_player(), "\n알림: " + bad_pass[0] + "에서 " +
+            ctime(bad_pass[1]) + "에 로그인 실패가 있었습니다.\n\n");
 	user->set("passwd_fail", 0); }
     check_email(user);
     user->BODY_OB->setup();
@@ -488,28 +467,30 @@ protected void choice(string choice, object user, string name)
     int i;
     string pass;
  
+    log_file("account_create", sprintf("%s confirmation=%s name=%s\n",
+        ctime(time()), choice, name));
     write("\n");
     choice = lower_case(choice);
-    if (member_array(choice, ({ "n", "no" }) ) >= 0)
-      { write("Ok, please reenter it then: ");
+    if (member_array(choice, ({ "n", "no", "아니오" }) ) >= 0)
+	  { write("알겠습니다. 이름을 다시 입력해 주세요: ");
 	input_to("get_name", 2, user);
 	return; }
-    else if (member_array(choice, ({ "y", "yes" }) ) == -1)
-      { write("Bad choice, please type y(es) or n(o): ");
+    else if (member_array(choice, ({ "y", "yes", "예" }) ) == -1)
+	  { write("잘못된 입력입니다. 예 또는 아니오를 입력해 주세요: ");
 	input_to("choice", user, name);
 	return; }
  
-//  If EMAIL_REGISTRATION has been defined in /include/login.h, check with
-//  the banish daemon for a pre-registered name and password.
+//  /include/login.h에서 EMAIL_REGISTRATION을 정의하면 차단 데몬에서
+//  사전 등록된 이름과 비밀번호를 확인합니다.
 #ifdef EMAIL_REGISTRATION
     pass = BANISH_D->check_mailreg_name(name);
 #else
     pass = "";
 #endif
  
-//  If REGISTER_MSG has been defined in /include/login.h, no new logins are
-//  possible at this stage. REGISTER_MSG should be defined as the printed
-//  message explaining why no unregistered users are being permitted.
+//  /include/login.h에서 REGISTER_MSG를 정의하면 이 단계에서 신규 로그인을
+//  허용하지 않습니다. REGISTER_MSG에는 미등록 사용자의 접속을 막는 사유를
+//  설명하는 메시지를 지정합니다.
 #ifdef REGISTER_MSG
     if (!pass || !stringp(pass) || pass == "")
       { write(REGISTER_MSG);
@@ -517,34 +498,33 @@ protected void choice(string choice, object user, string name)
 	return; }
 #endif /* REGISTER_MSG */
  
-//  If BANISHED_SITES has been defined in /include/login.h, check with
-//  the banish daemon for use of a banished site.
+//  /include/login.h에서 BANISHED_SITES를 정의하면 차단 데몬을 통해
+//  접속 위치가 차단되었는지 확인합니다.
 #ifdef BANISHED_SITES
-    //  Site banning code is from Dainia@DreamShadow
-    //  Updated 7/13/93 by Karathan
+    //  접속 위치 차단 코드는 Dainia@DreamShadow가 작성했습니다.
+    //  Karathan이 7/13/93에 수정했습니다.
     if (!pass || !stringp(pass) || pass == "")
       { i = BANISH_D->check_banned_site(query_ip_number());
 	if (i < 0)
-	  { write("\n  Could not resolve your machine's network ip number.\n" +
-		  "  An accessible ip number must be available for user " +
-		  "validation check.\n  Shutting down.\n\n");
+      { write("\n  사용자 컴퓨터의 네트워크 IP 주소를 확인할 수 없습니다.\n" +
+          "  사용자 확인을 위해 접근 가능한 IP 주소가 필요합니다.\n" +
+          "  연결을 종료합니다.\n\n");
  	   user->remove_user();
  	   return; }
 	if (i)
-	  { write("\n\n\tYour site has been placed on a registration by the\n" +
-		  "\tadmins of " + mud_name() + ".  This means that you must " +
-		  "mail\n\t\t" + ADMIN_EMAIL + "\n\tand request a character." +
-		  "\n\n\t\t\t--The Management\n");
+      { write("\n\n\t" + mud_name() + " 운영진이 현재 접속 위치의 등록을 요구하고 있습니다.\n" +
+          "\t캐릭터를 신청하려면 다음 주소로 이메일을 보내 주세요.\n" +
+          "\t\t" + ADMIN_EMAIL + "\n\n\t\t\t-운영진\n");
 	    user->remove_user();
 	    return; } }
 #endif /* BANISHED_SITES */
  
  
-//  If BANISHED_NAMES has been defined in /include/login.h, check with
-//  the banish daemon for use of a banished name.
+//  /include/login.h에서 BANISHED_NAMES를 정의하면 차단 데몬을 통해
+//  캐릭터 이름이 차단되었는지 확인합니다.
 #ifdef BANISHED_NAMES
     if (BANISH_D->check_banned_name(name))
-      { write("Sorry, that character name is restricted.\n\n" +
+	  { write("해당 캐릭터 이름은 사용할 수 없습니다.\n\n" +
 	      LOGIN_PROMPT);
 	input_to("get_name", 2, user);
 	return; }
@@ -554,12 +534,14 @@ protected void choice(string choice, object user, string name)
     export_uid(user);
     seteuid(getuid());
     user->SET_NAME(name);
+    log_file("account_create", sprintf("%s approved name=%s; calling newuserd\n",
+        ctime(time()), name));
     NEWUSER_D->create_new_user(user, pass);
     return;
 }
  
  
-//  Check the user's email for new entries.
+//  사용자에게 새 이메일이 도착했는지 확인합니다.
 void check_email(object user)
 {
     mapping mail_stat;
@@ -569,14 +551,13 @@ void check_email(object user)
     mail_stat = (mapping) MAILBOX_D->mail_status(user->NAME);
     toread = mail_stat["unread"];
     if (toread)
-	printf("\nYou have %d new piece%s of mail!\n\n",
- 	toread, (toread == 1 ? "" : "s"));
+    printf("\n새 편지가 %d통 도착했습니다.\n\n", toread);
   }
 }
  
  
-//  If online user display is selected, this function displays
-//  all online, visible users to those in the login process.
+//  접속자 표시 기능이 선택된 경우, 로그인 중인 사용자에게
+//  현재 접속 중인 공개 사용자 목록을 보여 줍니다.
 string active_users()
 {
     mixed *who;
@@ -601,10 +582,10 @@ string active_users()
 protected int filter_invis(object who)
 {
     if (!who || !environment(who))
-	// No logon's in display
+    // 로그인 중인 사용자는 목록에 표시하지 않습니다.
 	return 0;
     if ((int)who->query("npc"))
-	// No monsters in display
+    // 몬스터는 목록에 표시하지 않습니다.
 	return 0;
 #ifdef SUPPRESS_ADMIN_LOGIN
     if (adminp(geteuid(who)))
@@ -614,7 +595,7 @@ protected int filter_invis(object who)
 }
  
  
-//  Switch user object pointer for name of user 
+//  사용자 객체를 이름 문자열로 변환합니다.
 protected string switch_name(object who)
 {
     return capitalize((string)who->query("name")) ;

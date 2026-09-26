@@ -251,7 +251,10 @@ int valid_read( string file, mixed user, string func )
         return( i&1 );
     // added by Tru for /std/save.c, extended by Buddha for /std/user/save.c
     else if( objectp( user ) )
-        return( file == data_file( user ) || file == user_data_file( user )+__SAVE_EXTENSION__ );
+        return( file == data_file( user ) ||
+		file == user_data_file( user )+__SAVE_EXTENSION__ ||
+		file == PDATA_DIR + extract(geteuid(user), 0, 0) + "/" +
+			geteuid(user) + __SAVE_EXTENSION__ );
     else return 0;
 }
 
