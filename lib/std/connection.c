@@ -19,19 +19,19 @@ mapping domains;
 mixed *passwd_fail;
 int wizard, last_on, dead, hibernate;
 
-static object body_ob, tmp_body;
-static string termtype;
+nosave protected object body_ob, tmp_body;
+nosave protected string termtype;
 
 int remove();
 int save_data_conn();
-static void terminal_type(string term);
+protected void terminal_type(string term);
 
 //  It would be Bad (tm) to allow a connection object to be shadowed.
 
 int query_prevent_shadow() {  return 1;  }
  
 // Keep this static so that only driver can call this.
-static void logon() {
+protected void logon() {
 	seteuid(0);
 //	seteuid("Logon") ;
 	wizard = 0;

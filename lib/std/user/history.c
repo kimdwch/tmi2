@@ -16,9 +16,9 @@
 #include <commands.h>
 #include <uid.h>
 
-private static string *history_queue;
-private static int cmd_num, ptr;
-private static int max;
+nosave protected string *history_queue;
+nosave protected int cmd_num, ptr;
+nosave protected int max;
 
 int query_cmd_num() { return cmd_num; }
 int query_ptr() { return ptr; }

@@ -16,7 +16,9 @@ varargs string user_data_dir(object obj, string name) {
    if (!name) name = (geteuid(obj));
    if (!name) return "" ;
 //   if (!name) error("user_data_dir: Can't determine user's name.\n");
-   ret = data_dir(obj) + "/" + extract(name, 0, 0);
+        ret = data_dir(obj);
+        if (base_name(obj) != USER_OB)
+                ret += "/" + extract(name, 0, 0);
    return ret;
 }
 

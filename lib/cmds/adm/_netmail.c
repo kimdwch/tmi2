@@ -17,9 +17,9 @@
 inherit DAEMON;
 
 mixed * out_queue;
-static string output;
+nosave protected string output;
 int busy;
-static object ob;
+nosave protected object ob;
 
 
 mapping pop_top( string mudname );

@@ -18,10 +18,10 @@
 #include <config.h>
 #include <uid.h>
 
-private static string opcode, error_string;
-private static int line_done;
-private static object target;
-static string subgroup, filename;
+nosave protected string opcode, error_string;
+nosave protected int line_done;
+nosave protected object target;
+nosave protected string subgroup, filename;
 #define YES 1
 #define NO 0
 

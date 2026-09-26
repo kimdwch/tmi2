@@ -68,7 +68,7 @@ ddk
 inherit "/adm/obj/master/access";
 //inherit "/adm/obj/master/groups";  // Leto, done by access.c now
 
-static int access_loaded = 0;
+nosave protected int access_loaded = 0;
 
 void preload( string file );
 
@@ -78,7 +78,7 @@ void create()
 		call_out("free_objects", 3600);
 }
 
-static void free_objects()
+protected void free_objects()
 {
 	call_out("free_objects", 3600);
 	efun::reclaim_objects();
@@ -87,7 +87,7 @@ static void free_objects()
 // To test a new function xx in object yy, do
 // parse "-fcall yy xx arg" "-fshutdown"
 
-static void flag( string str )
+protected void flag( string str )
 {
      string file;
      mixed arg;
@@ -143,7 +143,7 @@ mixed compile_object( string file )
 // This is called when there is a segmentation fault or a bus error,
 // As it's static it can't be called by anything but the driver.
 
-static void crash( string error, object command_giver, object current_object )
+protected void crash( string error, object command_giver, object current_object )
 {
     log_file( "crashes", mud_name() + " CRASHED on: " + ctime( time() ) +
       " ERROR: " + error + "\n" );
@@ -571,7 +571,7 @@ string domain_file( string filename )
     string *path;
     
     path = explode( filename, "/" );
-    if( !path ) return "NONAME";
+    if( !path || !sizeof( path ) ) return "NONAME";
     
     switch( path[0] )
     {

@@ -49,15 +49,15 @@
  
 void logon(object ob);
 string active_users();
-static void get_name(string str, object ob);
-static void get_password(string pass, object ob, int count);
-static int check_password(string pass, object ob);
-static void choice(string choice, object ob, string name);
-static void register_site();
-static void exec_old_copy(string s, object ob);
-static void login_new_copy(object ob);
-static void enter_world(object ob);
-static void check_email(object user);
+protected void get_name(string str, object ob);
+protected void get_password(string pass, object ob, int count);
+protected int check_password(string pass, object ob);
+protected void choice(string choice, object ob, string name);
+protected void register_site();
+protected void exec_old_copy(string s, object ob);
+protected void login_new_copy(object ob);
+protected void enter_world(object ob);
+protected void check_email(object user);
  
  
 void create()
@@ -114,10 +114,45 @@ void logon(object ob)
 }
  
  
-static void get_name(string str, object ob)
+protected int valid_hangul_name(string name)
+{
+    int i, length, first, second, third, count;
+
+    length = strlen(name);
+    for (i = 0; i < length; ) {
+        first = name[i];
+        if (first >= 0xAC00 && first <= 0xD7A3) {
+            i++;
+        } else {
+            if (first < 0) first += 256;
+            if (i + 2 >= length) return 0;
+            second = name[i + 1];
+            third = name[i + 2];
+            if (second < 0) second += 256;
+            if (third < 0) third += 256;
+
+            if (first == 0xEA) {
+                if (second < 0xB0 || second > 0xBF) return 0;
+            } else if (first == 0xEB || first == 0xEC) {
+                if (second < 0x80 || second > 0xBF) return 0;
+            } else if (first == 0xED) {
+                if (second < 0x80 || second > 0x9E) return 0;
+            } else {
+                return 0;
+            }
+            if (third < 0x80 || third > 0xBF) return 0;
+            i += 3;
+        }
+        count++;
+        if (count > 6) return 0;
+    }
+    return count > 0;
+}
+
+protected void get_name(string str, object ob)
 {
     string tmp, tmp1, tmp2;
-    int bad_name, loop, i, sd_time;
+    int bad_name, loop, i, sd_time, exists, korean_name;
  
 // Did they supply anything?
     if (!str || str=="") {
@@ -179,23 +214,34 @@ static void get_name(string str, object ob)
       { ob->remove_user();
 	return; }
  
-    if (strlen(str) > 11)
-      { write("Sorry, your name can't have more than 11 characters.\n");
-	write(LOGIN_PROMPT);
-	input_to("get_name", 2, ob);
-	return; }
- 
     str = lower_case(str);
-    for (i = 0; i < strlen(str); i++)
-      { if (str[i] < 'a' || str[i] > 'z')
-	  { write("Sorry, your name can only have letters. (a-z)\n" +
-		  "Please enter a new name: ");
-	    input_to("get_name", 2, ob);
-	    return; } }
+    exists = file_exists(user_data_file(ob, str) + __SAVE_EXTENSION__);
+    korean_name = valid_hangul_name(str);
+    if (exists && !korean_name) {
+        if (strlen(str) > 11) {
+            write("Sorry, your name can't have more than 11 characters.\n");
+            write(LOGIN_PROMPT);
+            input_to("get_name", 2, ob);
+            return;
+        }
+        for (i = 0; i < strlen(str); i++) {
+            if (str[i] < 'a' || str[i] > 'z') {
+                write("Sorry, your name can only have letters. (a-z)\n" +
+                      "Please enter a new name: ");
+                input_to("get_name", 2, ob);
+                return;
+            }
+        }
+    } else if (!korean_name && str != "guest") {
+        write("New character names must use Hangul syllables only.\n");
+        write(LOGIN_PROMPT);
+        input_to("get_name", 2, ob);
+        return;
+    }
  
  
     //  Does the user even currently exist? If not, check for correct name.
-    if (!file_exists(user_data_file(ob, str) + __SAVE_EXTENSION__))
+    if (!exists)
       {
 //  Enable NO_NEW_USERS to disable new character creation.
 #ifdef NO_NEW_USERS
@@ -253,14 +299,14 @@ write(NO_NEW_USERS);
 }
  
  
-static void remove_copy(object ob)
+protected void remove_copy(object ob)
 {
     if (ob)
 	ob->remove();
 }
  
  
-static void get_password(string pass, object ob, int count)
+protected void get_password(string pass, object ob, int count)
 {
     object body;
     int hibernate;
@@ -337,7 +383,7 @@ query_ip_name( ob ) + "\n" );
 }
  
  
-static
+protected
 void login_new_copy(object ob)
 {
     if (!ob->restore_body())
@@ -355,7 +401,7 @@ void login_new_copy(object ob)
 }
  
  
-static
+protected
 void exec_old_copy(string s, object user)
 {
     object tmp, link;
@@ -409,7 +455,7 @@ void exec_old_copy(string s, object user)
 }
  
  
-static void enter_world(object user)
+protected void enter_world(object user)
 {
     mixed *bad_pass;
  
@@ -426,7 +472,7 @@ static void enter_world(object user)
 }
  
  
-static int check_password(string pass, object ob)
+protected int check_password(string pass, object ob)
 {
     string password;
  
@@ -437,7 +483,7 @@ static int check_password(string pass, object ob)
 }
  
  
-static void choice(string choice, object user, string name)
+protected void choice(string choice, object user, string name)
 {
     int i;
     string pass;
@@ -552,7 +598,7 @@ string active_users()
 }
  
  
-static int filter_invis(object who)
+protected int filter_invis(object who)
 {
     if (!who || !environment(who))
 	// No logon's in display
@@ -569,7 +615,7 @@ static int filter_invis(object who)
  
  
 //  Switch user object pointer for name of user 
-static string switch_name(object who)
+protected string switch_name(object who)
 {
     return capitalize((string)who->query("name")) ;
 }

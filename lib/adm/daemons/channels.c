@@ -43,7 +43,7 @@ mapping alias;     // a rude alias mechanism
 
 #define BACKLOG_MAX 15
 
-private static int
+protected int
 tell_user(object user, string mesg)
 {
     tell_object(user, wrap(sprintf("CHANNELS:\t%s\n", mesg)));
@@ -53,7 +53,7 @@ tell_user(object user, string mesg)
 #define NO_NEW_CHANNELS
 
 // Begin admin_channel() - only applies to I3 at the moment but who knows
-private static
+protected
 int admin_channel( string chan, object user, string* add_list,
                                                 string* rem_list )
 { string ext_ob, err;
@@ -74,14 +74,14 @@ int admin_channel( string chan, object user, string* add_list,
 }
 
 
-private static varargs int
+protected varargs int
 create_channel(string chan, object user, string group, int mode,
-		object ref )
+        object ref_object )
 {
     if (channels[chan])
         return 1;
 
-    if( living(user) && ref ) {
+    if( living(user) && ref_object ) {
         // Create channel came from a real user
         I3_CHANNEL->daemon_apply( user, CRE, 
 		({ user->query("name"), chan, mode }) );
@@ -94,14 +94,14 @@ create_channel(string chan, object user, string group, int mode,
 
     if( group )
         channels[chan]["priv"]=group;
-    if( ref )
-        channels[chan]["object"]=chan+"#"+base_name(ref)+".c";
+    if( ref_object )
+        channels[chan]["object"]=chan+"#"+base_name(ref_object)+".c";
 
     return 1;
 }
 
 
-varargs private static int
+varargs protected int
 kill_user(object user, string chan, int onquit)
 {
     string ext_ob, err;
@@ -161,7 +161,7 @@ delete_channel(string chan, object user)
 }
 
 
-private static varargs int
+protected varargs int
 add_user(string chan, object user)
 {
     string *toggle_list, priv, ext_ob, err, pchan;
@@ -209,7 +209,7 @@ add_user(string chan, object user)
 }
 
 
-private static int
+protected int
 kill_users(mixed chan)
 {
     int i;
@@ -503,7 +503,7 @@ int add_i3channels( mapping chanlist, int bootflag )
 }
 
 
-private static int scan_config() {
+protected int scan_config() {
     string *list, *split_line, line;
     int i, j;
 
@@ -587,7 +587,7 @@ register_channel(string chan, object user, int state, mixed *action )
 {
     int ret, mode;
     string group;
-    object ref;
+    object ref_object;
 
     if( origin() != ORIGIN_LOCAL && previous_object(1) && 
 	!adminp(previous_object(1)) && previous_object(1) != user) return 0;
@@ -604,11 +604,11 @@ register_channel(string chan, object user, int state, mixed *action )
                     ret=admin_channel( chan, user, action[0], action[1] );
                   break;
         case CRE: switch( sizeof( action ) ) {
-                        case 3: ref = action[2];
+                        case 3: ref_object = action[2];
                         case 2: mode = action[1];
                         case 1: group = action[0];
                   }
-                  ret = create_channel( chan, user, group, mode, ref ); 
+                  ret = create_channel( chan, user, group, mode, ref_object );
 		  break;
         case ADD: ret = add_user(chan, user);
 	          break;

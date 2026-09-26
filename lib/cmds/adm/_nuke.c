@@ -56,8 +56,9 @@ int cmd_nuke(string str) {
  
 return 1; }
  
-static int confirm_deletion(string str, string name, int banish,
+protected int confirm_deletion(string str, string name, int banish,
 			    int delete, int archive) {
+   string user_file, legacy_user_file;
  
    if(!str || member_array(lower_case(str), ({ "yes", "y" })) == -1) {
    write("Nuke: Character deletion aborted.\n");
@@ -81,6 +82,10 @@ static int confirm_deletion(string str, string name, int banish,
    find_player(name)->remove(); }
  
    //	Either move data files to ARCHIVE_DIR dir, or completely delete
+
+   user_file = DATA_DIR + USER_OB + "/" + name + __SAVE_EXTENSION__;
+   legacy_user_file = DATA_DIR + USER_OB + "/" + name[0..0] + "/" +
+		name + __SAVE_EXTENSION__;
  
    if(archive) {
  
@@ -91,9 +96,11 @@ mkdir( ARCHIVE_DIR[0..<2] );
      mkdir( ARCHIVE_DIR + "mail" );
    }
  
-   if(file_exists(DATA_DIR+"/std/user/"+name[0..0]+"/"+name+ __SAVE_EXTENSION__))
-   rename(DATA_DIR+"/std/user/" + name[0..0] + "/" + name + __SAVE_EXTENSION__,
-	  ARCHIVE_DIR + "user/" + name + __SAVE_EXTENSION__);
+   if(file_exists(user_file))
+   rename(user_file, ARCHIVE_DIR + "user/" + name + __SAVE_EXTENSION__);
+   else if(file_exists(legacy_user_file))
+   rename(legacy_user_file, ARCHIVE_DIR + "user/" + name + __SAVE_EXTENSION__);
+   if(file_exists(legacy_user_file)) rm(legacy_user_file);
    rename(PDATA_DIR+name[0..0]+ "/" + name + __SAVE_EXTENSION__, ARCHIVE_DIR +
 	  "connection/" + name + __SAVE_EXTENSION__);
    if(file_size("/data/mail/"+name+"-mbox.o") >= 0)
@@ -103,8 +110,8 @@ mkdir( ARCHIVE_DIR[0..<2] );
    }
  
    else {
-   if(file_exists(DATA_DIR+"/std/user/"+name[0..0]+"/"+name+__SAVE_EXTENSION__))
-   rm(DATA_DIR + "/std/user/" + name[0..0] + "/" + name + __SAVE_EXTENSION__);
+   rm(user_file);
+   rm(legacy_user_file);
     rm (PDATA_DIR + name[0..0] + "/" + name + __SAVE_EXTENSION__ );
    if(file_size("/data/mail/"+name+"-mbox.o") >= 0)
 	   rm( "/data/mail/"+name+"-mbox.o" );

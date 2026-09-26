@@ -22,11 +22,17 @@
 
 
 nomask int restore_body() {
+	string name, save_file;
+
 	if (base_name(previous_object()) != CONNECTION &&
 	    getuid(previous_object()) != ROOT_UID)  return 0;
 	seteuid(geteuid(previous_object()));
 	if (!geteuid())  return 0;
-	return restore_object(user_data_file(this_object())+__SAVE_EXTENSION__);
+	save_file = user_data_file(this_object()) + __SAVE_EXTENSION__;
+	if (file_exists(save_file)) return restore_object(save_file);
+	name = geteuid(this_object());
+	return restore_object(DATA_DIR + USER_OB + "/" + extract(name, 0, 0) +
+		"/" + name + __SAVE_EXTENSION__);
 }
 
 

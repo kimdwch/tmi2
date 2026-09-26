@@ -44,7 +44,7 @@ int cmd_suicide() {
  
 return 1; }
  
-static int confirm_suicide(string str) {
+protected int confirm_suicide(string str) {
  
    if(!str || member_array(lower_case(str), ({ "yes", "y" })) == -1) {
    write("Suicide attempt aborted.\n");  busy = 1;
@@ -55,8 +55,8 @@ static int confirm_suicide(string str) {
  
 return 1; }
  
-static int pass_check(string str) {
-   string password, name;
+protected int pass_check(string str) {
+   string password, name, user_file, legacy_user_file;
  
    busy = 0;				// Reset busy flag
  
@@ -96,16 +96,24 @@ static int pass_check(string str) {
 #endif
  
    //	Either move data files to ARCHIVE_DIR dir, or completely delete
+
+   user_file = user_data_file(this_player()) + __SAVE_EXTENSION__;
+   legacy_user_file = DATA_DIR + USER_OB + "/" + name[0..0] + "/" +
+		name + __SAVE_EXTENSION__;
  
    if(ARCHIVE_DIR) {
-   rename(user_data_file(this_player()) + __SAVE_EXTENSION__, ARCHIVE_DIR + 
-	  "user/" + name + __SAVE_EXTENSION__);
+   if(file_exists(user_file))
+   rename(user_file, ARCHIVE_DIR + "user/" + name + __SAVE_EXTENSION__);
+   else if(file_exists(legacy_user_file))
+   rename(legacy_user_file, ARCHIVE_DIR + "user/" + name + __SAVE_EXTENSION__);
+   if(file_exists(legacy_user_file)) rm(legacy_user_file);
    rename(PDATA_DIR + name[0..0] + "/" + name + __SAVE_EXTENSION__, 
 	  ARCHIVE_DIR + "connection/" + name + __SAVE_EXTENSION__);
    }
  
    else {
-   rm( user_data_file(this_player()) + __SAVE_EXTENSION__ );
+   rm(user_file);
+   rm(legacy_user_file);
    rm( PDATA_DIR + name[0..0] + "/" + name + __SAVE_EXTENSION__ );
    }
  
