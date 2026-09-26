@@ -248,7 +248,6 @@ initialize_user(object whom)
 {
     int i, j;
     object *list;
-    string priv;
     string *current_list;
 
     if (!whom || !living(whom)) list = users();

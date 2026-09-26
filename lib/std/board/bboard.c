@@ -155,8 +155,6 @@ valid_assign()
 int
 valid_remove(int i)
 {
-    string poster;
-
     if ( messages[i]["locked"] != geteuid(this_player()) &&
 	 !adminp(geteuid(this_player())) &&
 	     (string)this_player()->QCAPNAME != messages[i]["poster"]
@@ -714,7 +712,6 @@ int
 read(string str)
 {
     int i;
-    string tmp;
    
     if (id(str)) {
 	write(query_long());
@@ -781,8 +778,7 @@ read_text(string str)
 int
 remove_msg(string str)
 {
-    string poster,tmp, *tmpmsg;
-    int i,j;
+    int i;
    
     i = parse_num(str, "remove", PN_CUR);
     if (i == -1)
@@ -802,8 +798,8 @@ nosave protected int	orig_number;
 int
 edit_note(string str)
 {
-    int i, tmp, j, m;
-    string *lines, fl;
+    int i;
+    string fl;
    
     i = parse_num(str, "edit", PN_CUR);
     if (i == -1)
@@ -938,10 +934,10 @@ note(string str)
     return 1;
 } // note
 
-void
-clean_up()
+int
+clean_up(int inherited)
 {
-    return;
+    return 0;
 } // clean_up
 
 void set_id_ref(int n) {

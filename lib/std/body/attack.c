@@ -41,7 +41,7 @@ inherit SECURE_OBJECT ;
 // Prototypes for things that come in through the body object.
 
 varargs mixed set(string prop, mixed arg, mixed security) ;
-nosave protected object *attackers, target, *will_attack; // wombled by buddha
+nosave protected object *attackers, *will_attack; // wombled by buddha
 nosave protected int any_attack ;
 mixed link_data(string what);
  
@@ -275,7 +275,6 @@ object *query_attackers() {
 
 void run_away() {
 
-	int wimpy ;
 	string direction ;
 	mapping womble ;
 
@@ -301,7 +300,7 @@ void run_away() {
 void heal_up() {
 
 	int hp, sp, maxh, maxs ;
-	int time, dr, rate ;
+   int time ;
 
 // If he's a ghost we want to skip this entirely.
 	if (query("ghost")) return ;

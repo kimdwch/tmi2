@@ -254,7 +254,6 @@ nomask void disable_me() {
 
 void receive_message(string Class, string msg) {
    object shell;
-   string foo ;
    int htime;
 
 // Invisibility screen. This should catch all tells and says and so forth,

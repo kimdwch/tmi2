@@ -1,5 +1,3 @@
-#pragma save_binary
-
 /*
  * ftpd.c:
  *
@@ -1818,7 +1816,7 @@ void in_close_callback( int fd ) {
  */
 protected string get_path( int fd, string str ) {
     string *array, *array1, temp;
-    int i, j, s;
+    int i, s;
 
     if ( !str || str == "" ) {
 	/* no change of dir */

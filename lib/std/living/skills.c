@@ -134,9 +134,6 @@ protected void remove_bonus(string what, int val) {
 // rate.
 
 void improve_skill (string what, int points) {
-
-	int i ;
-
 	skill_points[what] = skill_points[what] + points ;
 	if (skill_points[what] > (50-skill_stats[what])*(2*skills[what]+1)) {
 		skills[what] = skills[what] + 1 ;

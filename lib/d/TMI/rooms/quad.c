@@ -10,21 +10,21 @@ void create()
   ::create();
   seteuid(getuid());
   set( "light", 1 );
-  set( "short", "The famous Quad" );
+  set( "short", "유명한 쿼드" );
   // NB: "@EndText" should not have spaces after it.
   // "EndText" should be on a line of its own (no indentation, tabs or spaces)
   set( "long", @EndText
-This is the famous TMI-2 quad reincarnated.
-It's a temporary zone from where people can work to various
-board rooms.
-to the south is the network room, where network related
-topics like Intermud-3 are discussed. To the north is the
-MudOS room, where driver problems can be discussed. To
-the east is the Tmi-2 mudlib bug room, where you can complain
-about bugs in this mudlib..
-Down is Fooland.......
+이곳은 새롭게 단장한 유명한 TMI-2 쿼드입니다.
+여러 게시판 방으로 이어지는 임시 구역입니다.
+남쪽에는 Intermud-3 같은 네트워크 관련 주제를 다루는 네트워크 방이,
+북쪽에는 드라이버 문제를 논의하는 MudOS 방이 있습니다.
+동쪽에는 TMI-2 머드 라이브러리의 버그를 신고하는 방이 있습니다.
+아래로 내려가면 Fooland입니다.
+
+뚜렷한 출구: 서쪽, 아래, 공허, 동쪽, 북쪽, 남쪽.
 EndText
   );
+  set( "exit_suppress", 1 );
   set( "exits", ([
    "down" : "/d/Fooland/hall",
  "east" : "/d/TMI/rooms/bugroom",

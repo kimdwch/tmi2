@@ -52,7 +52,7 @@ ddk
 // 96-03-03 : Leto fixed a hole in creator_file returning Root
 //            or backbone in case u,d or student.
 
-#pragma save_binary
+//#pragma save_binary
 
 #include <uid.h>
 #include <config.h>
@@ -182,7 +182,6 @@ protected void crash( string error, object command_giver, object current_object 
 int valid_write( string file, mixed user, string func )
 {
     int i;
-    string tmp, eff_user;
 
 //    return 1;
     if( !access_loaded )
@@ -348,7 +347,6 @@ void socket_preload()
 // preload an object
 void preload( string file )
 {
-    int t1;
     string err;
     
 //  if (file_name(previous_object()) != SIMUL_EFUN_OB) return;
@@ -564,8 +562,13 @@ string author_file( string filename )
     string *path;
     
     path = explode( filename, "/" );
-    if( !path ) return "NONAME";
-    if( path[0] == "u" ) return path[2];
+    if (filename == "/adm/obj/master")
+         return ROOT_UID;
+
+    if( !path )
+         return "NONAME";
+    if( path[0] == "u" )
+         return path[2];
     return 0;
 }
 
@@ -686,7 +689,7 @@ string trace_line(object obj, string prog, string file, int line) {
 }
 
 varargs string standard_trace(mapping mp, int flag) {
-    string obj, ret;
+    string ret;
     mapping *trace;
     int i, n;
 
@@ -741,7 +744,6 @@ string error_handler(mapping mp, int caught) {
 int valid_object(object ob) {
 
 	string foo;
-	int dummy;
 	if (!sscanf(file_name(ob), "%s#%*d", foo)) foo = file_name(ob);
         
         // No cloning from /tmp. That way we can always get an uid

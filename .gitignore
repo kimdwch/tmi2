@@ -1,4 +1,5 @@
 bin/
 lib/adm/etc/I3.o
+lib/adm/etc/I3.json
 lib/log/*
 lib/data/*

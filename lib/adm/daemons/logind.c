@@ -67,9 +67,10 @@ void create()
  
 void logon(object ob)
 {
+#ifdef NO_REMOTE_LOGINS
     string local_host, pattern;
     int a1, a2, a3, a4;
-	string s1,s2 ;
+#endif
  
     if (base_name(previous_object()) != CONNECTION)
 	return;
@@ -127,8 +128,11 @@ protected int valid_hangul_name(string name)
 
 protected void get_name(string str, object ob)
 {
-    string tmp, tmp1, tmp2, name_units;
-    int bad_name, loop, i, sd_time, exists, korean_name;
+    string name_units;
+    int i, exists, korean_name;
+#ifdef NO_SHUTDOWN_LOGIN
+    int sd_time;
+#endif
  
 // 이름을 입력했는지 확인합니다.
     if (!str || str=="") {
@@ -562,7 +566,6 @@ string active_users()
 {
     mixed *who;
     string output;
-    int loop;
  
     who = users() ;
     who = filter_array(who, "filter_invis", this_object());

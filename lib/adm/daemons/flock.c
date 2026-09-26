@@ -50,19 +50,50 @@ mapping filestats;
 // Note: the leading and trailing slashes, the quotes around each top level
 //   path, and the commas for delimeters.
 
-// prototypes for local functions
-void log_change(string pathname, string flag);
-string query_file_change(string pathname);
-int get_timestamp(string pathname);
-
 #define PUBLIC
-#define PRIVATE static
+#define PRIVATE protected
+
+// prototypes for local functions
+PUBLIC void log_change(string pathname, string flag);
 
 PUBLIC void create() {
     seteuid(ROOT_UID);
     files = ({ });
     lockobjs = ({ });
     filestats = ([ ]);
+}
+
+PRIVATE int get_timestamp(string pathname) {
+    mixed *stats;
+    int stamp;
+
+    if (file_size(pathname) >= 0) {
+        stats = stat(pathname);
+        stamp = stats[1];
+    } else
+        stamp = 0;
+    return stamp;
+}
+
+PRIVATE string query_file_change(string pathname) {
+    int position;
+    int oldstamp, newstamp;
+
+    if ((position = member_array(pathname, files)) == -1)
+        return 0;
+    newstamp = get_timestamp(pathname);
+    oldstamp = filestats[pathname]["timestamp"];
+
+    if (oldstamp != newstamp) {
+        if (oldstamp) {
+            if (newstamp)
+                return "!";
+            else
+                return "-";
+        } else
+            return "+";
+    }
+    return 0;
 }
 
 /*
@@ -225,50 +256,6 @@ PUBLIC string query_lockfn(object locker) {
                 return t;
         }
     }
-    return 0;
-}
-
-/*
- * get_timestamp()
- *   Returns the timestamp of a file, or 0 if the file doesn't exist.
- */
-PRIVATE int get_timestamp(string pathname) {
-    mixed *stats;
-    int position;
-    int stamp;
-
-    if (file_size(pathname) >= 0) {
-        stats = stat(pathname);
-        stamp = stats[1];
-    } else
-        stamp = 0;
-    return stamp;
-}
-
-/*
- * query_file_change()
- *   Returns a string that identifies the manner by which a file was changed.
- */
-PRIVATE string query_file_change(string pathname) {
-    mixed *stats;
-    int position;
-    int oldstamp, newstamp;
-
-    if ((position = member_array(pathname, files)) == -1)
-        return 0;
-    newstamp = get_timestamp(pathname);
-    oldstamp = filestats[pathname]["timestamp"];
-
-    if (oldstamp != newstamp) {
-        if (oldstamp) {
-            if (newstamp)
-                return "!"; // changed
-            else
-                return "-"; // purged
-        } else
-            return "+";     // added
-    }
-    // else file not changed or not created
     return 0;
 }
 

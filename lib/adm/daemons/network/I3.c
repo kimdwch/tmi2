@@ -99,8 +99,7 @@ int close_callback(object socket){
 }
   
 int send_packet(string type, string user, string mud, string target, mixed *data){
-    mixed *send, *names;
-    int i,found;
+    mixed *send;
  
 // Leto: Add origin()==LOCAL_ORGIN || base_name(prev_obj)[0..x]
 // == "/adm/daemons/network/I3/" check here.

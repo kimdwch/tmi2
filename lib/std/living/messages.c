@@ -80,11 +80,18 @@ string query_min() {
 string query_mout(string dir) {
 
   string str;
+  mixed cap_name;
 
   str = (string)this_object()->getenv("MOUT") + "";
   if ( strsrch ( str, "$N" ) == (-1) || strsrch ( str, "$D" ) == (-1) )
     str = "$N leaves $D.";
-  str = replace_string( str, "$N", (string)this_object()->query("cap_name") );
+  cap_name = this_object()->query("cap_name");
+  if (!stringp(cap_name) || cap_name == "") {
+    cap_name = this_object()->query("name");
+    if (!stringp(cap_name) || cap_name == "") cap_name = "Someone";
+    else cap_name = capitalize(cap_name);
+  }
+  str = replace_string( str, "$N", cap_name );
   if ( dir == "" || dir == 0 ) dir = "somewhere";
   str = replace_string( str, "$D", dir );
   return str;

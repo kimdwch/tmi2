@@ -1,5 +1,3 @@
-#pragma save_binary
- 
 //	File	:   /adm/daemons/event.c
 //	Creator	:   Glenn Ferguson (Watcher@TMI)   12/12/92
 //
@@ -86,7 +84,7 @@ protected void save_events() {
 protected void ERROR(string mesg, string err) {
  
    write_file(EVENT_LOG, mesg + "\t[" + extract(ctime(time()),4,15) + "]\n");
-   
+
    if(err && err != "")
    write_file(EVENT_LOG, " " + err + "\n\n");
    else write_file(EVENT_LOG, "\n");
@@ -255,7 +253,6 @@ return ; }
  
  int add_event(string type, mixed *event) {
    mixed *tmp;
-   int loop, flag;
  
    // Check accessing permissions ... ensure root command
  

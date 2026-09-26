@@ -74,7 +74,7 @@ inherit LIVING ;
  */
 protected varargs void complete_setup (string str);
 protected void die();
-protected int create_ghost();
+protected object create_ghost();
 int coins_carried();
 void init_setup();
 void destroy_autoload_obj();
@@ -113,7 +113,9 @@ nomask protected int cmd_hook(string cmd) {
     string file;
     string verb;
     int foo;
+#ifdef PROFILING
     mapping before, after;
+#endif
 
     verb = query_verb();
 
@@ -365,7 +367,7 @@ varargs void execute_attack (int hit_mod, int dam_mod) {
     object *prots;
     object weapon;
     int old_inv, s;
-    string victim, posgender;
+    string posgender;
     int *damrange;
 
     /*
@@ -792,8 +794,7 @@ void remove() {
 nosave protected int in_de_quit_script;
 
 varargs int quit(string str) {
-    object *stuff, *inv;
-    int i, j;
+    object *inv;
 
     if (!(origin() == ORIGIN_LOCAL || origin() == ORIGIN_DRIVER)
               && geteuid(previous_object()) != ROOT_UID)
@@ -939,10 +940,6 @@ protected int inventory_check(object obj) {
  * they need to function in today's changing mudlib.
  */
 void consistency_check() {
-    int i,j;
-    mapping doms, doms2;
-    string *domlist;
-
     /*
      * if you think everyone has been "fixed" then what you put here should
      * moved to create() and taken out.
